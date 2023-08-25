@@ -1,94 +1,108 @@
-import React, {useState} from "react";
+import React, {useState, useRef} from "react";
 import Button from "./UI/Button.jsx";
+import Header from "./Header.jsx";
+import ModalError from "./UI/ModalError.jsx";
 
 
 function Form({onNewRecord}) {
-    const [prevCurrentSavings, setCurrentSavings] = useState('')
-    const [prevYearlyContribution, setYearlyContribution] = useState('')
-    const [prevExpectedReturn, setExpectedReturn] = useState('')
-    const [prevDuration, setDuration] = useState('')
+    const currentSavingsRef = useRef()
+    const yearlyContributionRef = useRef()
+    const expectedReturnRef = useRef()
+    const durationRef = useRef()
+    const [prevError, setError] = useState('')
 
-    const CurrentSavingsHandler = (e) => {
-        setCurrentSavings(e.target.value)
-    }
-
-    const YearlyContributionHandler = (e) => {
-        setYearlyContribution(e.target.value)
-    }
-
-    const ExpectedReturnHandler = (e) => {
-        setExpectedReturn(e.target.value)
-    }
-
-    const DurationHandler = (e) => {
-        setDuration(e.target.value)
+    const closeError = () => {
+        setError('')
     }
 
     const SubmitHandler = (e) => {
-        e.preventDefault()
-        const newRecord  = {
+        const currentSavings = currentSavingsRef.current.value
+        const yearlyContribution = yearlyContributionRef.current.value
+        const expectedReturn = expectedReturnRef.current.value
+        const duration = durationRef.current.value
 
-            currentSavings: prevCurrentSavings,
-            yearlyContribution: prevYearlyContribution,
-            expectedReturn: prevExpectedReturn,
-            duration: prevDuration
+        e.preventDefault()
+        if (+currentSavings < 0) {
+            setError('Сбережения должны быть больше или равны нулю!')
+            return
+        }
+        if (+yearlyContribution < 0) {
+            setError('Ежегодный вклад должен быть больше или равен нулю!')
+            return
+        }
+
+        if (+expectedReturn < 0) {
+            setError('Ожидаемый процент должен быть больше или равен нулю!')
+            return
+        }
+        if (+duration <= 0) {
+            setError('Длительность должна быть больше нуля!')
+            return
+        }
+
+        const newRecord = {
+
+            currentSavings,
+            yearlyContribution,
+            expectedReturn,
+            duration
         }
         onNewRecord(newRecord)
-        setCurrentSavings('')
-        setYearlyContribution('')
-        setExpectedReturn('')
-        setDuration('')
+
+        currentSavingsRef.current.value = ''
+        yearlyContributionRef.current.value = ''
+        expectedReturnRef.current.value = ''
+        durationRef.current.value = ''
     }
 
     return (
-        <form className='form' onSubmit={SubmitHandler}>
-            <div className='input-group'>
-                <p>
-                    <label htmlFor='current-savings'>Ваши текущие накопления ($)</label>
-                    <input type='number'
-                           id='current-savings'
-                           onChange={CurrentSavingsHandler}
-                           value={prevCurrentSavings}
-                    />
+        <>
+        {prevError && <ModalError text={prevError} errorHandler={closeError}/>}
+            <form className='form' onSubmit={SubmitHandler}>
+                <div className='input-group'>
+                    <p>
+                        <label htmlFor='current-savings'>Ваши текущие накопления ($)</label>
+                        <input type='number'
+                               id='current-savings'
+                               ref={currentSavingsRef}
+                        />
+                    </p>
+                    <p>
+                        <label htmlFor='yearly-contribution'>
+                            Сколько отложите за год ($)
+                        </label>
+                        <input type='number'
+                               id='yearly-contribution'
+                               ref={yearlyContributionRef}
+                        />
+                    </p>
+                </div>
+                <div className='input-group'>
+                    <p>
+                        <label htmlFor='expected-return'>
+                            Ожидаемый Процент (%, в год)
+                        </label>
+                        <input type='number'
+                               id='expected-return'
+                               ref={expectedReturnRef}
+                        />
+                    </p>
+                    <p>
+                        <label htmlFor='duration'>
+                            Продолжительность Инвестирования (лет)
+                        </label>
+                        <input type='number'
+                               id='duration'
+                               ref={durationRef}
+                        />
+                    </p>
+                </div>
+                <p className='actions'>
+                    <Button type="reset">Сбросить</Button>
+                    <Button>Рассчитать</Button>
                 </p>
-                <p>
-                    <label htmlFor='yearly-contribution'>
-                        Сколько отложите за год ($)
-                    </label>
-                    <input type='number'
-                           id='yearly-contribution'
-                           onChange={YearlyContributionHandler}
-                           value={prevYearlyContribution}
-                    />
-                </p>
-            </div>
-            <div className='input-group'>
-                <p>
-                    <label htmlFor='expected-return'>
-                        Ожидаемый Процент (%, в год)
-                    </label>
-                    <input type='number'
-                           id='expected-return'
-                           onChange={ExpectedReturnHandler}
-                           value={prevExpectedReturn}
-                    />
-                </p>
-                <p>
-                    <label htmlFor='duration'>
-                        Продолжительность Инвестирования (лет)
-                    </label>
-                    <input type='number'
-                           id='duration'
-                           onChange={DurationHandler}
-                           value={prevDuration}
-                    />
-                </p>
-            </div>
-            <p className='actions'>
-                <Button type="reset">Сбросить</Button>
-                <Button>Рассчитать</Button>
-            </p>
-        </form>
+            </form>
+        </>
     )
 }
 
